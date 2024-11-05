@@ -1,4 +1,5 @@
 #include <furi.h>
+#include <stdlib.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
 #include <gui/view.h>
@@ -31,10 +32,12 @@ void short_vibrate() {
 
 // Draw callbacks for every view
 static void main_screen_draw_callback(Canvas* canvas, void* ctx) {
-    UNUSED(ctx);
+    MainApp* app = (MainApp*)ctx;
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str(canvas, 5, 30, "MainScreenView!");
+    //canvas_draw_str(canvas, 5, 40, (char*)app->screen_state);
+    notification_message(app->notify, &sequence_blink_magenta_100);
 }
 static void second_screen_draw_callback(Canvas* canvas, void* ctx) {
     UNUSED(ctx);
@@ -120,6 +123,7 @@ bool view_dispatcher_navigation_event_callback(void* ctx) {
 MainApp* init_main_app() {
     MainApp* app = malloc(sizeof(MainApp));
     app->view_dispatcher = view_dispatcher_alloc();
+    view_dispatcher_enable_queue(app->view_dispatcher);
     app->gui = furi_record_open(RECORD_GUI);
     app->notify = furi_record_open(RECORD_NOTIFICATION);
     app->screen_state = MainScreenView;
@@ -179,7 +183,6 @@ int32_t views_demo_main(void* p) {
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, view_dispatcher_navigation_event_callback);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, custom_event_callback_handler);
-    view_dispatcher_enable_queue(app->view_dispatcher);
 
     // Add all views
     view_dispatcher_add_view(app->view_dispatcher, MainScreenView, view1);
